@@ -103,24 +103,36 @@ def weather_snowflakes_etl_dag():
 
         # Standardize column names for Snowflake
         df.columns = [c.upper() for c in df.columns]
+        
+        sf = sf_settings
+        conn = snowflake.connector.connect(
+            user=sf.user,
+            password=sf.password.get_secret_value(),
+            account=sf.account,
+            warehouse=sf.warehouse,
+            database=sf.database,
+            schema=sf.schema_name,
+            role=sf.role
+        )
 
-        logger.info("Loading csv to Snowflakes...")
-
-        with ENGINE.connect() as conn:
-            conn.exec_driver_sql(f"USE WAREHOUSE {WAREHOUSE}")
-            conn.exec_driver_sql(f"USE DATABASE {DATABASE}")
-            conn.exec_driver_sql(f"USE SCHEMA {SCHEMA}")
-            
-            df.to_sql(
-                TABLE_NAME,
-                con=DB_URL.render_as_string(hide_password=False),
-                index=False,
-                if_exists="replace",
-                method="multi",
+        try:
+            logger.info("Loading to Snowflake using write_pandas...")
+        
+        # Use the specialized Snowflake-Pandas tool
+        # This is MUCH faster than to_sql as it uses the PUT + COPY command internally
+            success, nchunks, nrows, _ = write_pandas(
+                conn=conn,
+                df=df,
+                table_name=TABLE_NAME.upper(),
+                auto_create_table=True, # Handles the 'replace' logic for you
+                overwrite=True          # Overwrites the table if it exists
             )
-            conn.commit()
-
-        logger.success("csv loaded to Snowflakes!")
+        
+            if success:
+                logger.success(f"Successfully loaded {nrows} rows to Snowflake!")
+            
+        finally:
+            conn.close()
 
     # DAG Task Pipeline
     raw_data = extract()
