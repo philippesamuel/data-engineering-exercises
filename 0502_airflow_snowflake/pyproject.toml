@@ -6,10 +6,17 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "apache-airflow>=3.2.0",
+    "kaggle>=2.0.1",
     "loguru>=0.7.3",
     "pandas>=3.0.2",
     "pendulum>=3.2.0",
+    "polars>=1.39.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "requests>=2.33.1",
+]
+
+[dependency-groups]
+dev = [
+    "apache-airflow-providers-snowflake>=6.12.0",
 ]
