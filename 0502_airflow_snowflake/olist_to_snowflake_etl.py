@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -7,24 +6,16 @@ from pendulum import datetime
 import polars as pl
 
 from kaggle.api.kaggle_api_extended import KaggleApi
-from loguru import logger
+import logging as logger
 
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
 from config import settings
 
-# Remove the default stderr handler
-logger.remove()
-
-# Add a new handler pointing to stdout
-logger.add(
-    sys.stdout, colorize=True, format="<green>{time}</green> <level>{message}</level>"
-)
-
 sf_settings = settings.snowflake
 
-CHUNK_SIZE = 5_000
+CHUNK_SIZE = 50_000
 DATASET = "olistbr/brazilian-ecommerce"
 TMP_DIR_PATH = Path("/tmp/olist")
 
@@ -53,19 +44,27 @@ def download_kaggle_file(name, api: KaggleApi) -> str:
         path=TMP_DIR_PATH,
     )
     if success:
-        logger.success(f"File downloaded to {target_path}")
+        logger.info(f"File downloaded to {target_path}")
     return str(target_path.absolute())
 
 
 def download_kaggle_files() -> Path:
     target_path = Path(TMP_DIR_PATH)
-    api = API
-    logger.info(f"Downloading {DATASET}...")
-    success = api.dataset_download_files(dataset=DATASET, path=target_path)
-    if success:
-        logger.success(f"File downloaded to {target_path}")
+    zip_file_path = target_path / "brazilian-ecommerce.zip"
 
-    with ZipFile(target_path / "brazilian-ecommerce.zip", "r") as f:
+    if not zip_file_path.exists(): 
+        api = API
+        logger.info(f"Downloading {DATASET}...")
+        success = api.dataset_download_files(dataset=DATASET, path=target_path)
+        if success:
+            logger.info(f"File downloaded to {target_path}")
+
+    else:
+        logger.info(f"File {zip_file_path} already downloaded" )
+
+    logger.info(f"Extracting {zip_file_path}...")
+
+    with ZipFile(zip_file_path, "r") as f:
         f.extractall(target_path)
 
     return target_path.absolute()
@@ -83,7 +82,7 @@ def olist_to_snowflake_etl_dag() -> None:
     def extract_kaggle() -> None:
         _ = download_kaggle_files()
 
-    @task
+    @task(map_index_template="""{{ input_path_str.split('/')[-1] }}""")
     def sanitize_csv(input_path_str: str) -> None:
         input_path = Path(input_path_str)
         output_path = (
@@ -98,10 +97,9 @@ def olist_to_snowflake_etl_dag() -> None:
                 for line in source:
                     target.write(line)
 
-    @task
+    @task(map_index_template="""{{ table_name }}""")
     def load_to_snowflake(csv_path_str: str, table_name: str) -> None:
         csv_path = Path(csv_path_str)
-        table_name = csv_path.stem.upper()
         if not csv_path.exists():
             raise FileNotFoundError(f"CSV not found at {csv_path}")
         df = pl.scan_csv(csv_path_str)
@@ -122,7 +120,7 @@ def olist_to_snowflake_etl_dag() -> None:
             role=sf.role,
         )
         try:
-            logger.info("Loading to Snowflake using write_pandas...")
+            logger.info(f"Loading {table_name} to Snowflake using write_pandas...")
             # Load the first chunk with overwrite, then append others
             first_chunck = True
             for df_chunk in df.collect_batches(chunk_size=CHUNK_SIZE):
@@ -136,19 +134,20 @@ def olist_to_snowflake_etl_dag() -> None:
                 first_chunck = False
 
                 if success:
-                    logger.success(f"Successfully loaded {nrows} rows to Snowflake!")
+                    logger.info(f"Successfully loaded {nrows} rows to Snowflake!")
 
         finally:
             conn.close()
 
-    import shutil
-
-    @task(trigger_rule="all_done")  # Ensures cleanup runs even if a load fails
+    @task(trigger_rule="all_success")  # Ensures cleanup runs even if a load fails
     def cleanup_local_files(directory_path: str) -> None:
         path = Path(directory_path)
         if path.exists() and path.is_dir():
-            shutil.rmtree(path)
-            logger.success(f"Cleaned up temporary directory: {path}")
+            csv_files = path.glob("*.csv")
+            for f in csv_files:
+                logger.info(f"Removing file {f}")
+                f.unlink()
+            logger.info(f"Cleaned up temporary directory: {path}")
         else:
             logger.warning(f"Cleanup skipped: {path} not found or not a directory.")
 
@@ -162,17 +161,10 @@ def olist_to_snowflake_etl_dag() -> None:
     ]
     
     extract_task = extract_kaggle()
-    sanitize_tasks = (
-        sanitize_csv
-        .partial(
-            map_index_template="""{{ task.input_path_str.split('/')[-1] }}""",
-            )
-        .expand(input_path_str=_csv_paths))
+    sanitize_tasks = sanitize_csv.expand(input_path_str=_csv_paths)
     load_tasks = (
         load_to_snowflake
-        .partial(
-            map_index_template="""{{ task.table_name }}""",
-            )
+        .override(max_active_tis_per_dag=2)
         .expand_kwargs(_load_kwargs)
         )
     cleanup_task = cleanup_local_files(str(TMP_DIR_PATH))
