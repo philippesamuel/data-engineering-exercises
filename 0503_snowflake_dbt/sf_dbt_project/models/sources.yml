@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: olist
+    database: OLIST_DB
+    schema: PUBLIC
+    tables:
+      - name: OLIST_ORDERS
+      - name: OLIST_CUSTOMERS
+
