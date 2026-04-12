@@ -1,3 +1,5 @@
+# Week 5 day 3
+
 ## Activity 1 : Building an End-to-End dbt Model (Olist Dataset)
 
 ### Objective
@@ -59,3 +61,44 @@ Exclude records where price is null.
 
 - Create a fact model `fact_seller_performance` which provides aggregated price, and distinct order count for each seller.
 
+---
+# Week 5 day 4
+
+## Activity 1 : Add test cases and generate documentation for all the fact models
+
+### Objective
+In this exercise, you will add test cases for all the fact models and generate documentation for the same.
+
+### Instructions
+
+#### Step 1: Add test cases and documentation for `fact_orders`
+
+1. Create or update a `schema.yml` file inside the `models/facts/` directory.  
+2. Add test cases to ensure `ORDER_PURCHASE_YEAR` and `ORDER_STATUS` are not null.  
+3. Add test cases to confirm that `CNT_DISTINCT_ORDER` and `CNT_DISTINCT_CUSTOMER` are greater than or equal to 0.  
+4. Add descriptions for each column in the `schema.yml`.  
+
+
+#### Step 2: Add test cases and documentation for `fact_orders_geography` (You can reuse alredy built test cases)
+
+1. In the same `schema.yml`, define test cases for this model.  
+2. Add tests to ensure `ORDER_PURCHASE_YEAR`, `ORDER_STATUS`, `CUSTOMER_CITY`, and `CUSTOMER_STATE` are not null.  
+3. Add test cases to confirm that `CNT_DISTINCT_ORDER` and `CNT_DISTINCT_CUSTOMER` are greater than or equal to 0.  
+4. Document each column with business-friendly descriptions.  
+
+
+#### Step 3: Add test cases and documentation for `fact_seller_performance`
+
+1. Extend the `schema.yml` to include this model.  
+2. Add test cases to ensure `SELLER_ID` is not null and unique.  
+3. Add tests to ensure `TOTAL_SALES_VALUE` and `ORDER_COUNT` are not null.  
+4. Add test cases to confirm that `TOTAL_SALES_VALUE` and `ORDER_COUNT` are greater than or equal to 0.  
+5. Document each column in plain language, for example: "Total sales value contributed by the seller."  
+
+
+#### Step 4: Generate Documentation and Explore Lineage
+
+1. Generate dbt documentation for the project.  
+2. Open the documentation in the UI.  
+3. Navigate to each fact model and verify that the column descriptions are visible.  
+4. Explore the lineage graph to see upstream staging and source tables.
