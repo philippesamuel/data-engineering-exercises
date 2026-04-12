@@ -12,24 +12,14 @@ import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
 from config import settings
-
+from mappings import FILE_STEM_TO_TABLE_NAME
 sf_settings = settings.snowflake
 
 CHUNK_SIZE = 50_000
 DATASET = "olistbr/brazilian-ecommerce"
 TMP_DIR_PATH = Path("/tmp/olist")
 
-DATA_FILENAMES = [
-    "olist_order_reviews_dataset",
-    "olist_orders_dataset",
-    "olist_products_dataset",
-    "olist_sellers_dataset",
-    "product_category_name_translation",
-    "olist_geolocation_dataset",
-    "olist_order_items_dataset",
-    "olist_order_payments_dataset",
-    "olist_customers_dataset",
-]
+DATA_FILENAMES = list(FILE_STEM_TO_TABLE_NAME)
 
 API = KaggleApi()
 API.authenticate()
@@ -151,13 +141,13 @@ def olist_to_snowflake_etl_dag() -> None:
         else:
             logger.warning(f"Cleanup skipped: {path} not found or not a directory.")
 
-    _csv_paths = [str(TMP_DIR_PATH / f"{name}.csv") for name in DATA_FILENAMES]
+    _csv_paths = [str(TMP_DIR_PATH / f"{stem}.csv") for stem in DATA_FILENAMES]
     _load_kwargs = [
         {
-            "csv_path_str": str(TMP_DIR_PATH / f"{name}_utf8.csv"),
-            "table_name": name.upper(),
+            "csv_path_str": str(TMP_DIR_PATH / f"{stem}_utf8.csv"),
+            "table_name": tname,
         }
-        for name in DATA_FILENAMES
+        for stem, tname in FILE_STEM_TO_TABLE_NAME.items()
     ]
     
     extract_task = extract_kaggle()
