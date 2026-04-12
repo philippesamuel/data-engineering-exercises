@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: olist
-    database: SNOWFLAKE_LEARNING_DB
+    database: OLIST_DB
     schema: PUBLIC
     tables:
       - name: OLIST_ORDERS
