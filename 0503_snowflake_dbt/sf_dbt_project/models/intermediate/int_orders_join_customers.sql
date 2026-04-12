@@ -3,7 +3,7 @@ with orders_join_customers as (
         o.order_id
         , o.customer_id
         , o.order_status
-        , DATE(o.order_purchase_timestamp) as purchase_date
+        , DATE(o.order_purchase_timestamp) as order_purchase_date
         , c.customer_unique_id
         , c.customer_city
         , c.customer_state
