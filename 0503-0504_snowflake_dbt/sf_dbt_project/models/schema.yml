@@ -83,3 +83,39 @@ models:
                 expression: ">= 0"
               config:
                 severity: warn
+
+  - name: fact_seller_performance
+    columns:
+      - name: seller_id
+        description: "Seller's unique identifier"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+          - unique:
+              config:
+                severity: warn
+
+      - name: total_sales_value
+        description: "Sum of total sales attributed to a given seller_id"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
+
+      - name: order_count
+        description: "Number of distinct sales attributed to a given seller_id"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
