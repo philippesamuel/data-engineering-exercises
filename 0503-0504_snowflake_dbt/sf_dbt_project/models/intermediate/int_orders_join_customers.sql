@@ -12,6 +12,6 @@ with orders_join_customers as (
         inner join {{ ref('stg_customers' )}} as c 
             on (o.customer_id = c.customer_id)
     where 
-        ORDER_STATUS in ('shipped', 'approved', 'delivered')
+        order_status in ('shipped', 'approved', 'delivered')
 )
 select * from orders_join_customers
