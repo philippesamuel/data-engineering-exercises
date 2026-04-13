@@ -34,7 +34,6 @@ models:
               config:
                 severity: warn
 
-
   - name: fact_orders_geography
     description: "Fact model combining order and customer geography details"
     columns:
