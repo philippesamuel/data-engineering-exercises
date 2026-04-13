@@ -1,4 +1,40 @@
 models:
+  - name: fact_orders
+    description: "Fact model of total number of distinct orders and distinct customers per year"
+    columns:
+      - name: order_purchase_year
+        description: "Year extracted from order_purchase_date" 
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: order_status
+        description: "Current status of the order" 
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: cnt_distinct_order
+        description: "Number of distinct orders in a given year" 
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
+
+      - name: cnt_distinct_customer
+        description: "Number or distinct customers in a given year"
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
+
+
   - name: fact_orders_geography
     description: "Fact model combining order and customer geography details"
     columns:
@@ -30,3 +66,20 @@ models:
               config:
                 severity: warn
 
+      - name: cnt_distinct_order
+        description: "Number of distinct orders in a given year, in a given state/city" 
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
+
+      - name: cnt_distinct_customer
+        description: "Number or distinct customers in a given year, in a given state/city"
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+              config:
+                severity: warn
