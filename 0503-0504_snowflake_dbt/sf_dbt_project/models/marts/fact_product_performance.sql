@@ -4,8 +4,8 @@
 
 select
     p.product_category_name as category
-    , sum(oi.price + oi.freight_value) as total_sales
-    , count(distinct oi.product_id) as cnt_distinct_product
+    , sum(oi.price + coalesce(oi.freight_value, 0)) as total_revenue
+    , count(distinct oi.product_id) as cnt_distinct_products_sold
     , count(distinct oi.order_id) as cnt_distinct_order
     , avg(oi.order_delivery_days) as avg_delivery_days
     , avg(p.product_weight_g) as avg_product_weight_g
@@ -15,4 +15,3 @@ from
     inner join {{ ref('stg_products') }} as p 
         on (oi.product_id = p.product_id)
 group by 1
-order by 2 DESC

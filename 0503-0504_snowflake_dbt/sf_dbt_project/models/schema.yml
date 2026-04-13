@@ -84,6 +84,7 @@ models:
                 severity: warn
 
   - name: fact_seller_performance
+    description: "Fact model aggregating sales performance metrics per seller"
     columns:
       - name: seller_id
         description: "Seller's unique identifier"
@@ -118,3 +119,60 @@ models:
                 expression: ">= 0"
               config:
                 severity: warn
+  
+  - name: fact_product_performance
+    description: "Fact model aggregating product and delivery metrics per category"
+    columns:
+      - name: category
+        description: "Product category" 
+        tests:
+          - unique:
+              config:
+                severity: warn
+                
+          - not_null:
+              config:
+                severity: warn
+
+      - name: total_revenue
+        description: "Total sales (price + freight_value) for a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: cnt_distinct_products_sold
+        description: "Number of unique products sold within a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: cnt_distinct_order
+        description: "Number of unique orders placed within a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: avg_delivery_days
+        description: "Average delivery days for a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: avg_product_weight_g
+        description: "Average product weight in grams within a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: avg_product_photos_qty
+        description: "Average number of photos per product withing a given category"
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                

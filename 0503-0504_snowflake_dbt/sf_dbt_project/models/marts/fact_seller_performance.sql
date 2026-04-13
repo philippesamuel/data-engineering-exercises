@@ -8,4 +8,3 @@ select
     , count(distinct order_id) as order_count
 from {{ ref('int_order_items_sales') }}
 group by 1 
-order by 2,3 DESC
