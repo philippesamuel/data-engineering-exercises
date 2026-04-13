@@ -12,6 +12,6 @@ select
     , avg(p.product_photos_qty) as avg_product_photos_qty
 from 
     {{ ref('int_order_items_join_orders') }} as oi
-    inner join {{ ref('stg_products') }} as p 
+    inner join {{ ref('int_products_clean') }} as p 
         on (oi.product_id = p.product_id)
 group by 1
