@@ -14,19 +14,15 @@ resource "random_id" "suffix" {
   byte_length = 4
 }
 
-# Create S3 bucket with unique name + tags
-resource "aws_s3_bucket" "demo" {
-  bucket = "iac-demo-${random_id.suffix.hex}"  # final name like iac-demo-1a2b3c4d
-
+module "mybucket" {
+  source      = "./modules/s3_bucket"
+  bucket_name = "terraform-module-bucket-${random_id.suffix.hex}"
   tags = {
-    Name = "iac-demo"   # project identifier
-    Env  = "dev"        # environment tag
+    owner = "philippe.sa.costa@gmail.com"
+    env   = "dev"
   }
-
-  # force_destroy = true   # (optional) auto-delete bucket + objects on destroy
 }
 
-# Output the bucket name for reference/automation
-output "bucket_name" {
-  value = aws_s3_bucket.demo.bucket
+output "bucket_id" {
+  value = module.mybucket.bucket_id
 }
