@@ -26,10 +26,11 @@ resource "random_id" "suffix" {
 
 module "mybucket" {
   source      = "./modules/s3_bucket"
-  bucket_name = "terraform-module-bucket-${random_id.suffix.hex}"
+  bucket_name = "myapp-${terraform.workspace}-bucket-${random_id.suffix.hex}"
+  
   tags = {
-    owner = "philippe.sa.costa@gmail.com"
-    env   = "dev"
+    Name = "myapp-${terraform.workspace}-bucket-${random_id.suffix.hex}"
+    Env  = terraform.workspace
   }
 }
 
