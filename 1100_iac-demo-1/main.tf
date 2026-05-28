@@ -1,6 +1,16 @@
 terraform {
+  backend "s3" {
+    bucket         = "iac-remote-state-bucket-pc"
+    key            = "terraform/terraform.tfstate"
+    region         = "eu-central-1"
+    use_lockfile   = true
+    encrypt        = true 
+  }
+
   required_providers {
-    aws    = { source = "hashicorp/aws" }     # AWS provider for infra
+    aws    = {  # AWS provider for infra
+      source  = "hashicorp/aws" 
+    }        
     random = { source = "hashicorp/random" }  # Random provider for unique IDs
   }
 }
