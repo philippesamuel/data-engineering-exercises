@@ -6,5 +6,7 @@ sources:
     schema: PUBLIC
     tables:
       - name: OLIST_ORDERS
+      - name: OLIST_ORDER_ITEMS
+      - name: OLIST_PRODUCTS
       - name: OLIST_CUSTOMERS
 

@@ -11,4 +11,3 @@ select
     , count(distinct customer_unique_id) as cnt_distinct_customer
 from {{ ref('int_orders_join_customers') }}
 group by 1,2,3,4 
-order by 1,2,3,4
